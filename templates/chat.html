@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#173a35">
+    <title>AI Finance Assistant | Chat</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+    <style>
+        .chat-shell {
+            width: min(760px, calc(100% - 48px));
+            margin: 0 auto;
+            padding: 48px 0;
+        }
+
+        .chat-panel {
+            padding: 25px;
+        }
+
+        .chat-title {
+            margin: 0;
+            color: #173a35;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 28px;
+            font-weight: 500;
+        }
+
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        .chat-description {
+            margin: 10px 0 24px;
+            color: #687572;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .chat-form {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-form input {
+            flex: 1;
+            min-width: 0;
+            height: 44px;
+            padding: 0 12px;
+            border: 1px solid #d9e1dc;
+            border-radius: 5px;
+            outline: none;
+            color: #1c2927;
+            font: inherit;
+            font-size: 13px;
+        }
+
+        .chat-form input:focus {
+            border-color: #508170;
+            box-shadow: 0 0 0 3px #e2eee8;
+        }
+
+        .chat-answer {
+            margin-top: 20px;
+            padding: 17px;
+            border-left: 3px solid #176a4b;
+            border-radius: 4px;
+            background: #edf6ef;
+        }
+
+        .chat-answer-label {
+            margin: 0 0 8px;
+            color: #176a4b;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .chat-answer p {
+            margin: 0;
+            color: #34423d;
+            font-size: 13px;
+            line-height: 1.7;
+            overflow-wrap: anywhere;
+            white-space: pre-line;
+        }
+
+        .chat-question {
+            margin: 18px 0 0;
+            color: #687572;
+            font-size: 12px;
+        }
+
+        .chat-back {
+            display: inline-block;
+            margin-top: 20px;
+            color: #176a4b;
+            font-size: 12px;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .chat-back:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            .chat-shell {
+                width: min(100% - 32px, 760px);
+                padding-top: 32px;
+            }
+
+            .chat-panel {
+                padding: 18px;
+            }
+
+            .chat-form {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <div class="topbar-inner">
+            <a class="brand" href="{{ url_for('home') }}" aria-label="AI Finance Assistant dashboard">
+                <span class="brand-mark" aria-hidden="true">AF</span>
+                <span class="brand-name">AI Finance <span>Assistant</span></span>
+            </a>
+            <a class="chat-link" href="{{ url_for('home') }}">Back to dashboard</a>
+        </div>
+    </header>
+
+    <main class="chat-shell">
+        <section class="panel chat-panel" aria-labelledby="chat-title">
+            <p class="eyebrow">YOUR FINANCE, IN CONTEXT</p>
+            <h1 class="chat-title" id="chat-title">AI Finance Assistant</h1>
+            <p class="chat-description">Ask about your recorded income, expenses, balance, recent transactions, spending categories, or savings.</p>
+
+            <form class="chat-form" method="POST" action="{{ url_for('chat') }}">
+                <label class="visually-hidden" for="message">Your question</label>
+                <input id="message" type="text" name="message" value="{{ user_message }}" placeholder="e.g. How much did I spend on Food?" required autocomplete="off">
+                <button class="primary-button" type="submit">Ask assistant <span aria-hidden="true">→</span></button>
+            </form>
+
+            {% if user_message %}
+                <p class="chat-question"><strong>You asked:</strong> {{ user_message }}</p>
+            {% endif %}
+            <div class="chat-answer" role="status" aria-live="polite">
+                <p class="chat-answer-label">Assistant</p>
+                <p>{{ assistant_response }}</p>
+            </div>
+            <a class="chat-back" href="{{ url_for('home') }}">← Return to dashboard</a>
+        </section>
+    </main>
+</body>
+</html>

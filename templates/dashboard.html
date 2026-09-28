@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#173a35">
+    <title>Dashboard | AI Finance Assistant</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+</head>
+<body>
+    <header class="topbar">
+        <div class="topbar-inner">
+            <a class="brand" href="{{ url_for('home') }}" aria-label="AI Finance Assistant dashboard">
+                <span class="brand-mark" aria-hidden="true">AF</span>
+                <span class="brand-name">AI Finance <span>Assistant</span></span>
+            </a>
+            <a class="chat-link" href="{{ url_for('chat') }}">
+                <span class="chat-link-dot" aria-hidden="true"></span>
+                Open AI Chatbot
+            </a>
+        </div>
+    </header>
+
+    <main class="dashboard-shell">
+        <section class="page-heading" aria-labelledby="page-title">
+            <div>
+                <p class="eyebrow">PERSONAL FINANCE / OVERVIEW</p>
+                <h1 id="page-title">Your money, <span>in view.</span></h1>
+                <p class="page-description">A clear picture of what you have earned, spent, and kept.</p>
+            </div>
+            <p class="transaction-count">
+                <span class="count-number">{{ transactions|length }}</span>
+                <span>{{ 'transaction' if transactions|length == 1 else 'transactions' }} recorded</span>
+            </p>
+        </section>
+
+        <section class="summary-grid" aria-label="Finance summary">
+            <article class="summary-card income-card">
+                <div class="summary-card-top">
+                    <h2>Total income</h2>
+                    <span class="summary-marker" aria-hidden="true">IN</span>
+                </div>
+                <p class="summary-value">₹{{ '{:,.2f}'.format(total_income) }}</p>
+                <p class="summary-note">Money received</p>
+            </article>
+            <article class="summary-card expense-card">
+                <div class="summary-card-top">
+                    <h2>Total expenses</h2>
+                    <span class="summary-marker" aria-hidden="true">OUT</span>
+                </div>
+                <p class="summary-value">₹{{ '{:,.2f}'.format(total_expenses) }}</p>
+                <p class="summary-note">Money spent</p>
+            </article>
+            <article class="summary-card balance-card">
+                <div class="summary-card-top">
+                    <h2>Current balance</h2>
+                    <span class="summary-marker" aria-hidden="true">NET</span>
+                </div>
+                <p class="summary-value">₹{{ '{:,.2f}'.format(balance) }}</p>
+                <p class="summary-note">Income minus expenses</p>
+            </article>
+        </section>
+
+        <section class="panel charts-panel" aria-labelledby="charts-title">
+            <div class="section-heading charts-heading">
+                <div>
+                    <p class="eyebrow">SPENDING SNAPSHOT</p>
+                    <h2 id="charts-title">Income &amp; expenses</h2>
+                </div>
+                <span class="section-index" aria-hidden="true">CHARTS</span>
+            </div>
+            <div class="chart-grid">
+                <figure class="chart-block">
+                    <figcaption>
+                        <h3>Income vs expenses</h3>
+                        <p>Totals across your recorded transactions</p>
+                    </figcaption>
+                    <div class="chart-canvas-wrap">
+                        <canvas id="income-expense-chart" aria-label="Bar chart comparing total income and expenses" role="img"></canvas>
+                    </div>
+                </figure>
+                <figure class="chart-block category-chart-block">
+                    <figcaption>
+                        <h3>Expenses by category</h3>
+                        <p>How recorded expenses are distributed</p>
+                    </figcaption>
+                    <div class="chart-canvas-wrap">
+                        <canvas id="expense-category-chart" aria-label="Doughnut chart showing expenses by category" role="img"></canvas>
+                        <p id="expense-chart-empty" class="chart-empty" hidden>No expense data to display yet.</p>
+                    </div>
+                </figure>
+            </div>
+        </section>
+
+        <section class="panel entry-panel" aria-labelledby="entry-title">
+            {% if error_message %}
+                <p class="form-error" role="alert">{{ error_message }}</p>
+            {% endif %}
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">KEEP YOUR RECORD CURRENT</p>
+                    <h2 id="entry-title">Add a transaction</h2>
+                </div>
+                <span class="section-index" aria-hidden="true">01</span>
+            </div>
+            <form class="transaction-form" method="POST" action="{{ url_for('add_transaction') }}">
+                <label class="field description-field" for="description">
+                    <span>Description</span>
+                    <input id="description" type="text" name="description" placeholder="e.g. Part-time work" required>
+                </label>
+                <label class="field" for="amount">
+                    <span>Amount</span>
+                    <span class="amount-input-wrap">
+                        <span aria-hidden="true">₹</span>
+                        <input id="amount" type="number" name="amount" placeholder="0.00" step="0.01" min="0.01" required>
+                    </span>
+                </label>
+                <label class="field" for="transaction-type">
+                    <span>Type</span>
+                    <select id="transaction-type" name="transaction_type" required>
+                        <option value="Income">Income</option>
+                        <option value="Expense">Expense</option>
+                    </select>
+                </label>
+                <label class="field" for="category">
+                    <span>Category</span>
+                    <select id="category" name="category" required>
+                        {% for category in categories %}
+                            <option value="{{ category }}" {% if category == 'Other' %}selected{% endif %}>{{ category }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label class="field" for="transaction-date">
+                    <span>Date</span>
+                    <input id="transaction-date" type="date" name="date" value="{{ today }}" required>
+                </label>
+                <button class="primary-button" type="submit">Add transaction <span aria-hidden="true">+</span></button>
+            </form>
+        </section>
+
+        <section class="panel history-panel" aria-labelledby="history-title">
+            <div class="section-heading history-heading">
+                <div>
+                    <p class="eyebrow">LATEST ACTIVITY</p>
+                    <h2 id="history-title">Transaction history</h2>
+                </div>
+                <span class="section-index" aria-hidden="true">02</span>
+            </div>
+            {% if transactions %}
+                <div class="history-filters" aria-label="Filter transaction history">
+                    <label class="field search-field" for="history-search">
+                        <span>Search transactions</span>
+                        <input id="history-search" type="search" placeholder="Description, date, or category" autocomplete="off">
+                    </label>
+                    <label class="field" for="history-type-filter">
+                        <span>Type</span>
+                        <select id="history-type-filter">
+                            <option value="">All types</option>
+                            <option value="Income">Income</option>
+                            <option value="Expense">Expense</option>
+                        </select>
+                    </label>
+                    <label class="field" for="history-category-filter">
+                        <span>Category</span>
+                        <select id="history-category-filter">
+                            <option value="">All categories</option>
+                            {% for category in categories %}
+                                <option value="{{ category }}">{{ category }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                </div>
+                <p id="history-result-count" class="history-result-count" aria-live="polite"></p>
+                <div class="table-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th scope="col">Description</th>
+                                <th scope="col">Date</th>
+                                <th scope="col">Type</th>
+                                <th scope="col">Category</th>
+                                <th class="amount-column" scope="col">Amount</th>
+                                <th class="action-column" scope="col">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in transactions %}
+                                <tr data-transaction-row data-type="{{ transaction['transaction_type'] }}" data-category="{{ transaction['category'] or 'Other' }}">
+                                    <td class="description-cell">{{ transaction['description'] }}</td>
+                                    <td class="date-cell">{{ transaction['date'] or '—' }}</td>
+                                    <td>
+                                        <span class="type-badge {{ 'income-badge' if transaction['transaction_type'] == 'Income' else 'expense-badge' }}">
+                                            {{ transaction['transaction_type'] }}
+                                        </span>
+                                    </td>
+                                    <td><span class="category-cell">{{ transaction['category'] or 'Other' }}</span></td>
+                                    <td class="amount-column amount-cell">₹{{ '{:,.2f}'.format(transaction['amount']) }}</td>
+                                    <td class="action-column">
+                                        <a class="delete-link" href="{{ url_for('delete_transaction', transaction_id=transaction['id']) }}" aria-label="Delete {{ transaction['description'] }}">Delete</a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <p id="history-no-results" class="history-no-results" hidden>No transactions match these filters.</p>
+            {% else %}
+                <div class="empty-state">
+                    <span class="empty-mark" aria-hidden="true">+</span>
+                    <h3>No transactions yet</h3>
+                    <p>Your income and expenses will appear here after you add the first one.</p>
+                </div>
+            {% endif %}
+        </section>
+        <footer class="page-footer">AI Finance Assistant <span>·</span> Personal finance overview</footer>
+    </main>
+    <script id="income-expense-data" type="application/json">{{ income_expense_chart|tojson }}</script>
+    <script id="expense-category-data" type="application/json">{{ expense_category_chart|tojson }}</script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" defer></script>
+    <script src="{{ url_for('static', filename='dashboard-charts.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='dashboard-filters.js') }}" defer></script>
+</body>
+</html>
